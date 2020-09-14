@@ -1,0 +1,38 @@
+service: insolvenzen-nrw
+
+provider:
+  name: aws
+  region: eu-central-1
+  runtime: python3.8
+  stage: ${env:STAGE}
+  environment:
+    BUCKET_PUBLIC_NAME: "insolvenzen-nrw-${self:provider.stage}"
+    BUCKET_SOURCE_NAME: ${env:BUCKET_SOURCE_NAME}
+    SENTRY_URI: ${env:SENTRY_URI}
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - s3:*
+      Resource: "arn:aws:s3:::insolvenzen-nrw-${self:provider.stage}/*"
+
+functions:
+  scrape:
+    handler: handler.scrape
+    timeout: 120
+    events:
+      - schedule:
+          name: ${self:service}-${self:provider.stage}-scrape
+          rate: rate(15 minutes)
+          enabled: true
+
+plugins:
+  - serverless-python-requirements
+
+custom:
+  pythonRequirements:
+    slim: true
+
+package:
+  exclude:
+    - node_modules/**
+    - venv/**

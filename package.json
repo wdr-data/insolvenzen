@@ -1,0 +1,23 @@
+{
+  "name": "insolvenzen",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wdr-data/insolvenzen.git"
+  },
+  "author": "jh0ker",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/wdr-data/insolvenzen/issues"
+  },
+  "homepage": "https://github.com/wdr-data/insolvenzen#readme",
+  "dependencies": {
+    "serverless": "^2.0.0",
+    "serverless-python-requirements": "^5.1.0"
+  }
+}
