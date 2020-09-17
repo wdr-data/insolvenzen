@@ -22,3 +22,6 @@ __pycache__
 
 node_modules
 .vscode
+.env
+
+by_year_by_week.csv
