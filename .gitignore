@@ -25,3 +25,4 @@ node_modules
 .env
 
 by_year_by_week.csv
+by_district_name.csv

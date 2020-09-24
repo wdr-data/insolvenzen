@@ -24,7 +24,9 @@ def load_source_file(insolvency_type: InsolvencyType, filename: str):
     with open(
         path.join(os.environ["LOCAL_FILES"], insolvency_type.value, filename)
     ) as fp:
-        return json.load(fp)
+        data = json.load(fp)
+
+    return data
 
     # Live version - not working yet
     bio = BytesIO()

@@ -11,6 +11,8 @@ import sentry_sdk
 
 from insolvenzen.utils.storage import upload_dataframe
 from insolvenzen.utils.source import InsolvencyType, load_source_file, list_files
+from insolvenzen.data.inhabitants import inhabitants
+from insolvenzen.data import normalize
 
 
 def in_nrw(residence):
@@ -26,7 +28,7 @@ def in_nrw(residence):
 
 
 @lru_cache
-def get_data():
+def get_files():
     # Download website
     filenames = list_files(InsolvencyType.PRIVATE)
     files = {
@@ -38,8 +40,9 @@ def get_data():
     return files
 
 
-def clear_data():
-    files = get_data()
+@lru_cache
+def filter_data():
+    files = get_files()
 
     proceedings = []
     court_case_numbers = set()
@@ -100,6 +103,12 @@ def clear_data():
         f"{nrw_duplicates} proceedings in NRW were discarded due to referring to the same court + case number"
     )
 
+    return proceedings
+
+
+def history():
+    proceedings = filter_data()
+
     # Bin proceedings by year
     by_year = defaultdict(list)
 
@@ -127,14 +136,57 @@ def clear_data():
     return df_by_week
 
 
+def districts():
+    proceedings = filter_data()
+
+    # Filter for recent proceedings
+    start_date = dt.date.today() - dt.timedelta(days=30)
+    last_30_days = [p for p in proceedings if p["date"] > start_date]
+
+    # Group by district name
+    by_district_name = defaultdict(int)
+
+    for proceeding in last_30_days:
+        court = proceeding["courtcase-residences"][0]
+
+        district_name = court["geolocation-street"]["street-gemeinde"][
+            "gemeinde-kreis"
+        ]["kreis-name"]
+        district_name = normalize.district(district_name)
+        num_inhabitants = inhabitants[district_name]
+
+        by_district_name[district_name] += 1 / num_inhabitants * 100_000
+
+    # Fill missing districts
+    for district_name in inhabitants.keys():
+        if district_name == "Gesamt":
+            continue
+
+        if district_name not in by_district_name:
+            by_district_name[district_name] = 0.0
+
+    # Convert to dataframe
+    df = pd.DataFrame([by_district_name]).T
+
+    df.index.name = "Name"
+    df = df.rename(columns={0: "Insolvenzen pro 100.000 Einwohner"})
+
+    return df
+
+
 def write_data_test():
-    df = clear_data()
+    df = history()
+    # upload_dataframe(df, filename)
+    df = districts()
     # upload_dataframe(df, filename)
 
 
 # If the file is executed directly, print cleaned data
 if __name__ == "__main__":
-    df = clear_data()
-    print(df)
+    df = districts()
+    with open("by_district_name.csv", "w") as fp:
+        fp.write(df.to_csv(index=True))
+
+    df = history()
     with open("by_year_by_week.csv", "w") as fp:
         fp.write(df.to_csv(index=True))
