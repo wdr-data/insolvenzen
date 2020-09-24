@@ -44,6 +44,13 @@ def clear_data():
     proceedings = []
     court_case_numbers = set()
 
+    # Statistics overall
+    total_proceedings = 0
+    no_courtcase_residences = 0
+
+    # Statistics in NRW
+    nrw_duplicates = 0
+
     # Filter irrelevant and duplicate values
     for date, fil in files.items():
         # No proceedings on this day
@@ -51,6 +58,14 @@ def clear_data():
             continue
 
         for proceeding in fil["verfahreneroeffnet"]:
+            # Count total proceedings
+            total_proceedings += 1
+
+            # Test if entry contains courtcase residences
+            if not proceeding.get("courtcase-residences", []):
+                no_courtcase_residences += 1
+                continue
+
             # Not in NRW
             if not any(
                 in_nrw(residence)
@@ -64,7 +79,7 @@ def clear_data():
 
             # Duplicate court case number
             if unique_case_number in court_case_numbers:
-                print("Ignoring duplicate case number", unique_case_number)
+                nrw_duplicates += 1
                 continue
 
             court_case_numbers.add(unique_case_number)
@@ -75,7 +90,15 @@ def clear_data():
             # Add proceeding to the list
             proceedings.append(proceeding)
 
-    print("Found", len(proceedings), "proceedings")
+    print(f"Found a total of {total_proceedings} in all of DE")
+    print(
+        f"No courtcase-residences found for {no_courtcase_residences} out of those proceedings ({round(no_courtcase_residences / total_proceedings, 1)}%)"
+    )
+
+    print("Found", len(proceedings), "relevant proceedings")
+    print(
+        f"{nrw_duplicates} proceedings in NRW were discarded due to referring to the same court + case number"
+    )
 
     # Bin proceedings by year
     by_year = defaultdict(list)
@@ -92,9 +115,6 @@ def clear_data():
         calendar = proceeding["date"].isocalendar()
         by_year_and_week[calendar[0]][calendar[1]].append(proceeding)
         by_year_and_week_count[calendar[0]][calendar[1]] += 1
-
-    print("Number of proceedings in 2019:", len(by_year[2019]))
-    print("Number of proceedings in 2019 week 42:", len(by_year_and_week[2019][42]))
 
     # Construct dataframe
     df_by_week = pd.concat(
