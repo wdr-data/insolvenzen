@@ -19,3 +19,10 @@
 ### run scrapers for private Insolvenzen
 
 `python -m insolvenzen.scrapers.private`
+
+### Data Source
+`...`
+
+### Method 
+`...`
+
