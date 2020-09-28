@@ -22,7 +22,7 @@ functions:
     events:
       - schedule:
           name: ${self:service}-${self:provider.stage}-scrape
-          rate: rate(15 minutes)
+          rate: cron(30 6 ? * * *)
           enabled: true
 
 plugins:

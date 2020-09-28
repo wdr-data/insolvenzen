@@ -9,10 +9,12 @@ sentry_sdk.init(os.environ["SENTRY_URI"], integrations=[AwsLambdaIntegration()])
 
 # Import your scraper here ⬇️
 from insolvenzen.scrapers.private import write_data_private
+from insolvenzen.scrapers.regular import write_data_regular
 
 # Add your scraper here ⬇️, without () at the end
 SCRAPERS = [
     write_data_private,
+    write_data_regular,
 ]
 
 
