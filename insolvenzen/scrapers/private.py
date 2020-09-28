@@ -184,9 +184,9 @@ def write_data_test():
 # If the file is executed directly, print cleaned data
 if __name__ == "__main__":
     df = districts()
-    with open("by_district_name.csv", "w") as fp:
+    with open("private_by_district_name.csv", "w") as fp:
         fp.write(df.to_csv(index=True))
 
     df = history()
-    with open("by_year_by_week.csv", "w") as fp:
+    with open("private_by_year_by_week.csv", "w") as fp:
         fp.write(df.to_csv(index=True))

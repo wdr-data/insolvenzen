@@ -24,5 +24,8 @@ node_modules
 .vscode
 .env
 
-by_year_by_week.csv
-by_district_name.csv
+private_by_year_by_week.csv
+private_by_district_name.csv
+regular_by_year_by_week.csv
+regular_by_district_name.csv
+
