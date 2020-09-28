@@ -20,7 +20,7 @@ from insolvenzen.scrapers.common import filter_data
 
 
 def history():
-    cases, stats = filter_data(InsolvencyType.REGULAR)
+    cases, stats = filter_data(InsolvencyType.PRIVATE)
     proceedings = cases[CaseType.VERFAHRENEROEFFNET]
 
     # Bin proceedings by year
@@ -51,7 +51,7 @@ def history():
 
 
 def districts():
-    cases, stats = filter_data(InsolvencyType.REGULAR)
+    cases, stats = filter_data(InsolvencyType.PRIVATE)
     proceedings = cases[CaseType.VERFAHRENEROEFFNET]
 
     # Filter for recent proceedings
@@ -89,11 +89,11 @@ def districts():
     return df
 
 
-def write_data_test():
+def write_data_private():
     df = history()
-    # upload_dataframe(df, filename)
+    upload_dataframe(df, "private_by_district_name.csv")
     df = districts()
-    # upload_dataframe(df, filename)
+    upload_dataframe(df, "private_by_year_by_week.csv")
 
 
 # If the file is executed directly, print cleaned data

@@ -19,24 +19,24 @@ from insolvenzen.data import normalize
 from insolvenzen.scrapers.common import filter_data
 
 
-def history():
-    cases, stats = filter_data(InsolvencyType.PRIVATE)
-    proceedings = cases[CaseType.VERFAHRENEROEFFNET]
+def history(case_type):
+    cases, stats = filter_data(InsolvencyType.REGULAR)
+    proceedings = cases[case_type]
 
     # Bin proceedings by year
     by_year = defaultdict(list)
 
-    for proceeding in proceedings:
-        by_year[proceeding["date"].year].append(proceeding)
+    for cases in proceedings:
+        by_year[cases["date"].year].append(cases)
 
     # Bin proceedings by year and week
     by_year_and_week = defaultdict(lambda: defaultdict(list))
     by_year_and_week_count = defaultdict(lambda: defaultdict(int))
 
-    for proceeding in proceedings:
+    for cases in proceedings:
         # Note: isocalendar week behaves weirdly between years
-        calendar = proceeding["date"].isocalendar()
-        by_year_and_week[calendar[0]][calendar[1]].append(proceeding)
+        calendar = cases["date"].isocalendar()
+        by_year_and_week[calendar[0]][calendar[1]].append(cases)
         by_year_and_week_count[calendar[0]][calendar[1]] += 1
 
     # Construct dataframe
@@ -50,13 +50,13 @@ def history():
     return df_by_week
 
 
-def districts():
-    cases, stats = filter_data(InsolvencyType.PRIVATE)
-    proceedings = cases[CaseType.VERFAHRENEROEFFNET]
+def districts(case_type):
+    cases, stats = filter_data(InsolvencyType.REGULAR)
+    cases = cases[case_type]
 
     # Filter for recent proceedings
     start_date = dt.date.today() - dt.timedelta(days=30)
-    last_30_days = [p for p in proceedings if p["date"] > start_date]
+    last_30_days = [p for p in cases if p["date"] > start_date]
 
     # Group by district name
     by_district_name = defaultdict(int)
@@ -84,24 +84,27 @@ def districts():
     df = pd.DataFrame([by_district_name]).T
 
     df.index.name = "Name"
-    df = df.rename(columns={0: "Insolvenzen pro 100.000 Einwohner"})
+    df = df.rename(columns={0: "Pro 100.000 Einwohner"})
 
     return df
 
 
-def write_data_test():
-    df = history()
-    # upload_dataframe(df, filename)
-    df = districts()
-    # upload_dataframe(df, filename)
+def write_data_regular():
+    for case_type in CaseType:
+        df = districts(case_type)
+        upload_dataframe(df, f"regular_by_district_name_{case_type.value}.csv")
+
+        df = history(case_type)
+        upload_dataframe(df, f"regular_by_year_by_week_{case_type.value}.csv")
 
 
 # If the file is executed directly, print cleaned data
 if __name__ == "__main__":
-    df = districts()
-    with open("regular_by_district_name.csv", "w") as fp:
-        fp.write(df.to_csv(index=True))
+    for case_type in CaseType:
+        df = districts(case_type)
+        with open(f"regular_by_district_name_{case_type.value}.csv", "w") as fp:
+            fp.write(df.to_csv(index=True))
 
-    df = history()
-    with open("regular_by_year_by_week.csv", "w") as fp:
-        fp.write(df.to_csv(index=True))
+        df = history(case_type)
+        with open(f"regular_by_year_by_week_{case_type.value}.csv", "w") as fp:
+            fp.write(df.to_csv(index=True))

@@ -26,6 +26,10 @@ node_modules
 
 private_by_year_by_week.csv
 private_by_district_name.csv
-regular_by_year_by_week.csv
-regular_by_district_name.csv
 
+regular_by_year_by_week_abweisungmangelsmasse.csv
+regular_by_year_by_week_verfahreneroeffnet.csv
+regular_by_year_by_week_sicherungsmassnahmen.csv
+regular_by_district_name_abweisungmangelsmasse.csv
+regular_by_district_name_verfahreneroeffnet.csv
+regular_by_district_name_sicherungsmassnahmen.csv
