@@ -11,6 +11,12 @@ class InsolvencyType(Enum):
     REGULAR = "in"
 
 
+class CaseType(Enum):
+    VERFAHRENEROEFFNET = "verfahreneroeffnet"
+    ABWEISUNGMANGELSMASSE = "abweisungmangelsmasse"
+    SICHERUNGSMASSNAHMEN = "sicherungsmassnahmen"
+
+
 try:
     s3 = client("s3")
     bucket = os.environ["BUCKET_SOURCE_NAME"]
