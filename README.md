@@ -12,10 +12,10 @@
 
 `pipenv sync`
 
-### if pipenv shell doesn't start, then execute
+### start pipenv shell
 
 `pipenv shell`
 
 ### run scrapers for private Insolvenzen
 
-`python -m insolvenzen.scarper.private`
+`python -m insolvenzen.scrapers.private`
