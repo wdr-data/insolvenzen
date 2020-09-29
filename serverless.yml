@@ -18,6 +18,14 @@ provider:
       Action:
         - s3:*
       Resource: "arn:aws:s3:::${env:BUCKET_SOURCE_NAME}/*"
+    - Effect: Allow
+      Action:
+        - s3:*
+      Resource: "arn:aws:s3:::${env:BUCKET_SOURCE_NAME}/"
+    - Effect: Allow
+      Action:
+        - s3:*
+      Resource: "arn:aws:s3:::${env:BUCKET_SOURCE_NAME}"
 
 functions:
   scrape:
