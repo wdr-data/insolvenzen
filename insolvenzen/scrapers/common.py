@@ -34,7 +34,6 @@ def get_files(insolvency_type):
     return files
 
 
-@lru_cache
 def filter_data(insolvency_type):
     files = get_files(insolvency_type)
 
