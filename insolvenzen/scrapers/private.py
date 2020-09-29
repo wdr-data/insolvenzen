@@ -84,7 +84,7 @@ def districts():
     df = pd.DataFrame([by_district_name]).T
 
     df.index.name = "Name"
-    df = df.rename(columns={0: "Insolvenzen pro 100.000 Einwohner"})
+    df = df.rename(columns={0: "Pro 100.000 Einwohner"})
 
     return df
 
