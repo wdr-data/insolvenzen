@@ -41,13 +41,15 @@ def download_file(filename):
     return bio
 
 
-def upload_dataframe(df, filename, *, change_notification=None, compare=None):
+def upload_dataframe(
+    df, filename, *, index=True, change_notification=None, compare=None
+):
 
     if compare is None:
         compare = simple_compare
 
     # Convert to csv and encode to get bytes
-    write = df.to_csv(index=False).encode("utf-8")
+    write = df.to_csv(index=index).encode("utf-8")
 
     # Read old file-like object to check for differences
     bio_old = BytesIO()
