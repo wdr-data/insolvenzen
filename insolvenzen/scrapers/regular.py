@@ -72,7 +72,7 @@ def districts(case_type):
     last_30_days = [p for p in cases if p["date"] > start_date]
 
     # Group by district name
-    by_district_name = defaultdict(int)
+    by_district_name = defaultdict(lambda: defaultdict(int))
 
     for proceeding in last_30_days:
         court = proceeding["courtcase-residences"][0]
@@ -83,7 +83,10 @@ def districts(case_type):
         district_name = normalize.district(district_name)
         num_inhabitants = inhabitants[district_name]
 
-        by_district_name[district_name] += 1 / num_inhabitants * 100_000
+        by_district_name[district_name][CASE_TYPE_HEADERS[case_type]] += 1
+        by_district_name[district_name][
+            f"{CASE_TYPE_HEADERS[case_type]} pro 100.000 Einwohner"
+        ] += (1 / num_inhabitants * 100_000)
 
     # Fill missing districts
     for district_name in inhabitants.keys():
@@ -91,23 +94,31 @@ def districts(case_type):
             continue
 
         if district_name not in by_district_name:
-            by_district_name[district_name] = 0.0
+            by_district_name[district_name] = {
+                CASE_TYPE_HEADERS[case_type]: 0,
+                f"{CASE_TYPE_HEADERS[case_type]} pro 100.000 Einwohner": 0.0,
+            }
 
     # Convert to dataframe
-    df = pd.DataFrame([by_district_name]).T
+    df = pd.DataFrame(by_district_name).T
 
+    df[CASE_TYPE_HEADERS[case_type]] = df[CASE_TYPE_HEADERS[case_type]].astype(int)
     df.index.name = "Name"
-    df = df.rename(columns={0: "Pro 100.000 Einwohner"})
+
+    df = df.sort_index()
 
     return df
 
 
 def write_data_regular():
+    districtses = []
     histories_by_week = []
 
     for case_type in CaseType:
         df = districts(case_type)
         upload_dataframe(df, f"regular_by_district_name_{case_type.value}.csv")
+
+        districtses.append(df)
 
         df_week, df_year_week = history(case_type)
         upload_dataframe(df_year_week, f"regular_by_year_by_week_{case_type.value}.csv")
@@ -115,18 +126,26 @@ def write_data_regular():
 
         histories_by_week.append(df_week)
 
+    df_districtses = pd.concat(districtses, axis=1)
+    df_districtses.index.name = "Name"
+
+    upload_dataframe(df_districtses, f"regular_by_district_name_merged.csv")
+
     df_histories_by_week = pd.concat(histories_by_week, axis=1)
     upload_dataframe(df_histories_by_week, f"regular_by_week_merged.csv")
 
 
 # If the file is executed directly, print cleaned data
 if __name__ == "__main__":
+    districtses = []
     histories_by_week = []
 
     for case_type in CaseType:
         df = districts(case_type)
         with open(f"regular_by_district_name_{case_type.value}.csv", "w") as fp:
             fp.write(df.to_csv(index=True))
+
+        districtses.append(df)
 
         df_week, df_year_week = history(case_type)
         with open(f"regular_by_year_by_week_{case_type.value}.csv", "w") as fp:
@@ -135,6 +154,12 @@ if __name__ == "__main__":
             fp.write(df_week.to_csv(index=True))
 
         histories_by_week.append(df_week)
+
+    df_districtses = pd.concat(districtses, axis=1)
+    df_districtses.index.name = "Name"
+
+    with open(f"regular_by_district_name_merged.csv", "w") as fp:
+        fp.write(df_districtses.to_csv(index=True))
 
     df_histories_by_week = pd.concat(histories_by_week, axis=1)
 
