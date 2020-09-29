@@ -30,7 +30,7 @@ provider:
 functions:
   scrape:
     handler: handler.scrape
-    timeout: 1500
+    timeout: 900
     events:
       - schedule:
           name: ${self:service}-${self:provider.stage}-scrape
