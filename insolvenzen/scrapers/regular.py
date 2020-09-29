@@ -19,6 +19,13 @@ from insolvenzen.data import normalize
 from insolvenzen.scrapers.common import filter_data
 
 
+CASE_TYPE_HEADERS = {
+    CaseType.VERFAHRENEROEFFNET: "Insolvenzverfahren",
+    CaseType.ABWEISUNGMANGELSMASSE: "Abweisungen mangels Masse",
+    CaseType.SICHERUNGSMASSNAHMEN: "Sicherungsmaßnahmen",
+}
+
+
 def history(case_type):
     cases, stats = filter_data(InsolvencyType.REGULAR)
     proceedings = cases[case_type]
@@ -30,24 +37,30 @@ def history(case_type):
         by_year[cases["date"].year].append(cases)
 
     # Bin proceedings by year and week
-    by_year_and_week = defaultdict(lambda: defaultdict(list))
+    by_week_count = defaultdict(int)
     by_year_and_week_count = defaultdict(lambda: defaultdict(int))
 
     for cases in proceedings:
         # Note: isocalendar week behaves weirdly between years
         calendar = cases["date"].isocalendar()
-        by_year_and_week[calendar[0]][calendar[1]].append(cases)
+
+        # ISO week as string for datawrapper
+        by_week_count[f"{calendar[0]}W{calendar[1]}"] += 1
+
         by_year_and_week_count[calendar[0]][calendar[1]] += 1
 
-    # Construct dataframe
-    df_by_week = pd.concat(
+    # Construct dataframes
+    df_week_year = pd.concat(
         {k: pd.Series(v).astype(float) for k, v in by_year_and_week_count.items()},
         axis=1,
     )
+    df_week_year.index.name = "Woche"
 
-    df_by_week.index.name = "Woche"
+    df_week = pd.DataFrame(data=[by_week_count]).T
+    df_week.index.name = "Woche"
+    df_week = df_week.rename(columns={0: CASE_TYPE_HEADERS[case_type]})
 
-    return df_by_week
+    return df_week, df_week_year
 
 
 def districts(case_type):
@@ -90,21 +103,40 @@ def districts(case_type):
 
 
 def write_data_regular():
+    histories_by_week = []
+
     for case_type in CaseType:
         df = districts(case_type)
         upload_dataframe(df, f"regular_by_district_name_{case_type.value}.csv")
 
-        df = history(case_type)
-        upload_dataframe(df, f"regular_by_year_by_week_{case_type.value}.csv")
+        df_week, df_year_week = history(case_type)
+        upload_dataframe(df_year_week, f"regular_by_year_by_week_{case_type.value}.csv")
+        upload_dataframe(df_week, f"regular_by_week_{case_type.value}.csv")
+
+        histories_by_week.append(df_week)
+
+    df_histories_by_week = pd.concat(histories_by_week, axis=1)
+    upload_dataframe(df_histories_by_week, f"regular_by_week_merged.csv")
 
 
 # If the file is executed directly, print cleaned data
 if __name__ == "__main__":
+    histories_by_week = []
+
     for case_type in CaseType:
         df = districts(case_type)
         with open(f"regular_by_district_name_{case_type.value}.csv", "w") as fp:
             fp.write(df.to_csv(index=True))
 
-        df = history(case_type)
+        df_week, df_year_week = history(case_type)
         with open(f"regular_by_year_by_week_{case_type.value}.csv", "w") as fp:
-            fp.write(df.to_csv(index=True))
+            fp.write(df_year_week.to_csv(index=True))
+        with open(f"regular_by_week_{case_type.value}.csv", "w") as fp:
+            fp.write(df_week.to_csv(index=True))
+
+        histories_by_week.append(df_week)
+
+    df_histories_by_week = pd.concat(histories_by_week, axis=1)
+
+    with open(f"regular_by_week_merged.csv", "w") as fp:
+        fp.write(df_histories_by_week.to_csv(index=True))
