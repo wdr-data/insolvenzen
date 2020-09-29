@@ -34,6 +34,7 @@ def get_files(insolvency_type):
     return files
 
 
+@lru_cache
 def filter_data(insolvency_type):
     files = get_files(insolvency_type)
 
@@ -93,3 +94,8 @@ def filter_data(insolvency_type):
     )
 
     return cases, stats
+
+
+def clear_caches():
+    get_files.cache_clear()
+    filter_data.cache_clear()

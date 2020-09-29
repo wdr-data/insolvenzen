@@ -7,6 +7,8 @@ from sentry_sdk.integrations.aws_lambda import AwsLambdaIntegration
 
 sentry_sdk.init(os.environ["SENTRY_URI"], integrations=[AwsLambdaIntegration()])
 
+from insolvenzen.scrapers.common import clear_caches
+
 # Import your scraper here ⬇️
 from insolvenzen.scrapers.private import write_data_private
 from insolvenzen.scrapers.regular import write_data_regular
@@ -14,6 +16,7 @@ from insolvenzen.scrapers.regular import write_data_regular
 # Add your scraper here ⬇️, without () at the end
 SCRAPERS = [
     write_data_private,
+    clear_caches,
     write_data_regular,
 ]
 
