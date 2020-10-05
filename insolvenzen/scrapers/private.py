@@ -91,9 +91,9 @@ def districts():
 
 def write_data_private():
     df = history()
-    upload_dataframe(df, "private_by_district_name.csv")
-    df = districts()
     upload_dataframe(df, "private_by_year_by_week.csv")
+    df = districts()
+    upload_dataframe(df, "private_by_district_name.csv")
 
 
 # If the file is executed directly, print cleaned data
