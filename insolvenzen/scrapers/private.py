@@ -16,7 +16,7 @@ from insolvenzen.utils.source import (
 )
 from insolvenzen.data.inhabitants import inhabitants
 from insolvenzen.data import normalize
-from insolvenzen.scrapers.common import filter_data, in_nrw
+from insolvenzen.scrapers.common import filter_data, in_nrw, signed
 
 
 def history():
@@ -94,11 +94,45 @@ def districts():
     return df
 
 
+def current():
+    cases, stats = filter_data(InsolvencyType.PRIVATE)
+    proceedings = cases[CaseType.VERFAHRENEROEFFNET]
+
+    # Filter for recent proceedings
+    latest_data = max(p["date"] for p in proceedings)
+
+    date_7_days_ago = latest_data - dt.timedelta(days=7)
+    date_14_days_ago = latest_data - dt.timedelta(days=14)
+
+    last_7_days = len([p for p in proceedings if p["date"] > date_7_days_ago])
+    the_7_days_before = len(
+        [p for p in proceedings if date_7_days_ago >= p["date"] > date_14_days_ago]
+    )
+    try:
+        percent_change = f"{signed(round((last_7_days - the_7_days_before) / the_7_days_before * 100))}%"
+    except ZeroDivisionError:
+        percent_change = "+∞%"
+
+    df = pd.DataFrame(
+        data={
+            "Letzte 7 Tage": {"Insolvenzverfahren": last_7_days},
+            "Die 7 Tage davor": {"Insolvenzverfahren": the_7_days_before},
+            "Veränderung": {"Insolvenzverfahren": percent_change},
+        }
+    ).T
+
+    return df
+
+
 def write_data_private():
     df = history()
     upload_dataframe(df, "private_by_year_by_week.csv")
+
     df = districts()
     upload_dataframe(df, "private_by_district_name.csv")
+
+    df = current()
+    upload_dataframe(df, "private_current.csv")
 
 
 # If the file is executed directly, print cleaned data
@@ -109,4 +143,8 @@ if __name__ == "__main__":
 
     df = history()
     with open("private_by_year_by_week.csv", "w") as fp:
+        fp.write(df.to_csv(index=True))
+
+    df = current()
+    with open("private_current.csv", "w") as fp:
         fp.write(df.to_csv(index=True))
