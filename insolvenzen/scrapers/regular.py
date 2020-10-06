@@ -161,6 +161,8 @@ def write_data_regular():
         histories_by_week.append(df_week)
 
         df = current(case_type)
+        upload_dataframe(df, f"regular_current_{case_type.value}.csv")
+        currents.append(df)
 
     df_districtses = pd.concat(districtses, axis=1)
     df_districtses.index.name = "Name"
