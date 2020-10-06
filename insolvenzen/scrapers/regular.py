@@ -134,7 +134,7 @@ def current(case_type):
 
     df = pd.DataFrame(
         data={
-            "Letzte 7 Tage": {CASE_TYPE_HEADERS[case_type]: last_7_days},
+            "Der letzten 7 Tage": {CASE_TYPE_HEADERS[case_type]: last_7_days},
             "Die 7 Tage davor": {CASE_TYPE_HEADERS[case_type]: the_7_days_before},
             "Veränderung": {CASE_TYPE_HEADERS[case_type]: percent_change},
         }

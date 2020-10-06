@@ -89,7 +89,7 @@ def districts():
     df = pd.DataFrame([by_district_name]).T
 
     df.index.name = "Name"
-    df = df.rename(columns={0: "Pro 100.000 Einwohner"})
+    df = df.rename(columns={0: "pro 100.000 Einwohner"})
 
     return df
 
@@ -115,7 +115,7 @@ def current():
 
     df = pd.DataFrame(
         data={
-            "Letzte 7 Tage": {"Insolvenzverfahren": last_7_days},
+            "Der letzten 7 Tagen": {"Insolvenzverfahren": last_7_days},
             "Die 7 Tage davor": {"Insolvenzverfahren": the_7_days_before},
             "Veränderung": {"Insolvenzverfahren": percent_change},
         }
