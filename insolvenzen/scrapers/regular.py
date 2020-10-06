@@ -16,7 +16,7 @@ from insolvenzen.utils.source import (
 )
 from insolvenzen.data.inhabitants import inhabitants
 from insolvenzen.data import normalize
-from insolvenzen.scrapers.common import filter_data
+from insolvenzen.scrapers.common import filter_data, in_nrw
 
 
 CASE_TYPE_HEADERS = {
@@ -28,21 +28,21 @@ CASE_TYPE_HEADERS = {
 
 def history(case_type):
     cases, stats = filter_data(InsolvencyType.REGULAR)
-    proceedings = cases[case_type]
+    cases = cases[case_type]
 
     # Bin proceedings by year
     by_year = defaultdict(list)
 
-    for cases in proceedings:
-        by_year[cases["date"].year].append(cases)
+    for case in cases:
+        by_year[case["date"].year].append(case)
 
     # Bin proceedings by year and week
     by_week_count = defaultdict(int)
     by_year_and_week_count = defaultdict(lambda: defaultdict(int))
 
-    for cases in proceedings:
+    for case in cases:
         # Note: isocalendar week behaves weirdly between years
-        calendar = cases["date"].isocalendar()
+        calendar = case["date"].isocalendar()
 
         # ISO week as string for datawrapper
         by_week_count[f"{calendar[0]}W{calendar[1]}"] += 1
@@ -67,15 +67,18 @@ def districts(case_type):
     cases, stats = filter_data(InsolvencyType.REGULAR)
     cases = cases[case_type]
 
-    # Filter for recent proceedings
-    start_date = dt.date.today() - dt.timedelta(days=30)
+    # Filter for recent cases
+    latest_data = max(p["date"] for p in cases)
+    start_date = latest_data - dt.timedelta(days=30)
     last_30_days = [p for p in cases if p["date"] > start_date]
 
     # Group by district name
     by_district_name = defaultdict(lambda: defaultdict(int))
 
-    for proceeding in last_30_days:
-        court = proceeding["courtcase-residences"][0]
+    for case in last_30_days:
+        court = next(
+            residence for residence in case["courtcase-residences"] if in_nrw(residence)
+        )
 
         district_name = court["geolocation-street"]["street-gemeinde"][
             "gemeinde-kreis"

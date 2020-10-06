@@ -16,7 +16,7 @@ from insolvenzen.utils.source import (
 )
 from insolvenzen.data.inhabitants import inhabitants
 from insolvenzen.data import normalize
-from insolvenzen.scrapers.common import filter_data
+from insolvenzen.scrapers.common import filter_data, in_nrw
 
 
 def history():
@@ -55,14 +55,19 @@ def districts():
     proceedings = cases[CaseType.VERFAHRENEROEFFNET]
 
     # Filter for recent proceedings
-    start_date = dt.date.today() - dt.timedelta(days=30)
+    latest_data = max(p["date"] for p in proceedings)
+    start_date = latest_data - dt.timedelta(days=30)
     last_30_days = [p for p in proceedings if p["date"] > start_date]
 
     # Group by district name
     by_district_name = defaultdict(int)
 
     for proceeding in last_30_days:
-        court = proceeding["courtcase-residences"][0]
+        court = next(
+            residence
+            for residence in proceeding["courtcase-residences"]
+            if in_nrw(residence)
+        )
 
         district_name = court["geolocation-street"]["street-gemeinde"][
             "gemeinde-kreis"
