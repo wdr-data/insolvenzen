@@ -21,7 +21,7 @@
 `python -m insolvenzen.scrapers.private`
 
 ### Data Source
-`...`
+`insolvex.de`
 
 ### Method 
 `...`
