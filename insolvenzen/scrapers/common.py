@@ -10,6 +10,14 @@ from insolvenzen.utils.source import (
 )
 
 
+def signed(number):
+    prefix = ""
+    if number >= 0:
+        prefix = "+"
+
+    return f"{prefix}{number}"
+
+
 def in_nrw(residence):
     """
     Checks if the given residence is in NRW

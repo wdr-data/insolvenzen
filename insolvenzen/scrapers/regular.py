@@ -16,7 +16,7 @@ from insolvenzen.utils.source import (
 )
 from insolvenzen.data.inhabitants import inhabitants
 from insolvenzen.data import normalize
-from insolvenzen.scrapers.common import filter_data
+from insolvenzen.scrapers.common import filter_data, in_nrw, signed
 
 
 CASE_TYPE_HEADERS = {
@@ -28,21 +28,21 @@ CASE_TYPE_HEADERS = {
 
 def history(case_type):
     cases, stats = filter_data(InsolvencyType.REGULAR)
-    proceedings = cases[case_type]
+    cases = cases[case_type]
 
     # Bin proceedings by year
     by_year = defaultdict(list)
 
-    for cases in proceedings:
-        by_year[cases["date"].year].append(cases)
+    for case in cases:
+        by_year[case["date"].year].append(case)
 
     # Bin proceedings by year and week
     by_week_count = defaultdict(int)
     by_year_and_week_count = defaultdict(lambda: defaultdict(int))
 
-    for cases in proceedings:
+    for case in cases:
         # Note: isocalendar week behaves weirdly between years
-        calendar = cases["date"].isocalendar()
+        calendar = case["date"].isocalendar()
 
         # ISO week as string for datawrapper
         by_week_count[f"{calendar[0]}W{calendar[1]}"] += 1
@@ -67,15 +67,18 @@ def districts(case_type):
     cases, stats = filter_data(InsolvencyType.REGULAR)
     cases = cases[case_type]
 
-    # Filter for recent proceedings
-    start_date = dt.date.today() - dt.timedelta(days=30)
+    # Filter for recent cases
+    latest_data = max(p["date"] for p in cases)
+    start_date = latest_data - dt.timedelta(days=30)
     last_30_days = [p for p in cases if p["date"] > start_date]
 
     # Group by district name
     by_district_name = defaultdict(lambda: defaultdict(int))
 
-    for proceeding in last_30_days:
-        court = proceeding["courtcase-residences"][0]
+    for case in last_30_days:
+        court = next(
+            residence for residence in case["courtcase-residences"] if in_nrw(residence)
+        )
 
         district_name = court["geolocation-street"]["street-gemeinde"][
             "gemeinde-kreis"
@@ -110,9 +113,40 @@ def districts(case_type):
     return df
 
 
+def current(case_type):
+    cases, stats = filter_data(InsolvencyType.REGULAR)
+    cases = cases[case_type]
+
+    # Filter for recent proceedings
+    latest_data = max(p["date"] for p in cases)
+
+    date_7_days_ago = latest_data - dt.timedelta(days=7)
+    date_14_days_ago = latest_data - dt.timedelta(days=14)
+
+    last_7_days = len([p for p in cases if p["date"] > date_7_days_ago])
+    the_7_days_before = len(
+        [p for p in cases if date_7_days_ago >= p["date"] > date_14_days_ago]
+    )
+    try:
+        percent_change = f"{signed(round((last_7_days - the_7_days_before) / the_7_days_before * 100))}%"
+    except ZeroDivisionError:
+        percent_change = "+∞%"
+
+    df = pd.DataFrame(
+        data={
+            "Der letzten 7 Tage": {CASE_TYPE_HEADERS[case_type]: last_7_days},
+            "Die 7 Tage davor": {CASE_TYPE_HEADERS[case_type]: the_7_days_before},
+            "Veränderung": {CASE_TYPE_HEADERS[case_type]: percent_change},
+        }
+    ).T
+
+    return df
+
+
 def write_data_regular():
     districtses = []
     histories_by_week = []
+    currents = []
 
     for case_type in CaseType:
         df = districts(case_type)
@@ -126,6 +160,10 @@ def write_data_regular():
 
         histories_by_week.append(df_week)
 
+        df = current(case_type)
+        upload_dataframe(df, f"regular_current_{case_type.value}.csv")
+        currents.append(df)
+
     df_districtses = pd.concat(districtses, axis=1)
     df_districtses.index.name = "Name"
 
@@ -134,11 +172,15 @@ def write_data_regular():
     df_histories_by_week = pd.concat(histories_by_week, axis=1)
     upload_dataframe(df_histories_by_week, f"regular_by_week_merged.csv")
 
+    df_currents = pd.concat(currents, axis=1)
+    upload_dataframe(df_currents, f"regular_current_merged.csv")
+
 
 # If the file is executed directly, print cleaned data
 if __name__ == "__main__":
     districtses = []
     histories_by_week = []
+    currents = []
 
     for case_type in CaseType:
         df = districts(case_type)
@@ -155,6 +197,12 @@ if __name__ == "__main__":
 
         histories_by_week.append(df_week)
 
+        df = current(case_type)
+        with open(f"regular_current_{case_type.value}.csv", "w") as fp:
+            fp.write(df.to_csv(index=True))
+
+        currents.append(df)
+
     df_districtses = pd.concat(districtses, axis=1)
     df_districtses.index.name = "Name"
 
@@ -165,3 +213,8 @@ if __name__ == "__main__":
 
     with open(f"regular_by_week_merged.csv", "w") as fp:
         fp.write(df_histories_by_week.to_csv(index=True))
+
+    df_currents = pd.concat(currents, axis=1)
+
+    with open(f"regular_current_merged.csv", "w") as fp:
+        fp.write(df_currents.to_csv(index=True))
