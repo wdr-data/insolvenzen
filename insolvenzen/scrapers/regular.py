@@ -40,14 +40,21 @@ def history(case_type):
     by_week_count = defaultdict(int)
     by_year_and_week_count = defaultdict(lambda: defaultdict(int))
 
+    calendar_today = dt.date.today().isocalendar()
+    year_today = calendar_today[0]
+    week_today = calendar_today[1]
+
     for case in cases:
         # Note: isocalendar week behaves weirdly between years
         calendar = case["date"].isocalendar()
+        year = calendar[0]
+        week = calendar[1]
 
         # ISO week as string for datawrapper
-        by_week_count[f"{calendar[0]}W{calendar[1]}"] += 1
+        if year == year_today or year == year_today - 1 and week >= week_today:
+            by_week_count[f"{year}W{week}"] += 1
 
-        by_year_and_week_count[calendar[0]][calendar[1]] += 1
+        by_year_and_week_count[year][week] += 1
 
     # Construct dataframes
     df_week_year = pd.concat(
