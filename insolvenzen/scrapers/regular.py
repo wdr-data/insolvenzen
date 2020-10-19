@@ -73,6 +73,7 @@ def history(case_type):
         axis=1,
     ).T.fillna(0.0)
     df_week.index.name = "Woche"
+    df_week = df_week.reindex(sorted(df_week.columns), axis=1)
 
     return df_week, df_week_year
 
