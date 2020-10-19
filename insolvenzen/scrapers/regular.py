@@ -67,6 +67,10 @@ def history(case_type):
         axis=1,
     )
     df_week_year.index.name = "Woche"
+    df_week_year["Durchschnitt 2018/2019"] = (
+        df_week_year[2018] + df_week_year[2019]
+    ) / 2.0
+    df_week_year = df_week_year.drop(columns=[2018, 2019])
 
     df_week = pd.concat(
         {k: pd.Series(v).astype(float) for k, v in by_week_count.items()},
