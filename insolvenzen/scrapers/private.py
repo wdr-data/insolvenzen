@@ -119,7 +119,7 @@ def current():
             "Die 7 Tage davor": {"Insolvenzverfahren": the_7_days_before},
             "Veränderung": {"Insolvenzverfahren": percent_change},
         }
-    ).T
+    )
 
     return df
 

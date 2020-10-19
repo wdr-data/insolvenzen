@@ -152,8 +152,8 @@ def current(case_type):
             "Der letzten 7 Tage": {CASE_TYPE_HEADERS[case_type]: last_7_days},
             "Die 7 Tage davor": {CASE_TYPE_HEADERS[case_type]: the_7_days_before},
             "Veränderung": {CASE_TYPE_HEADERS[case_type]: percent_change},
-        }
-    ).T
+        },
+    )
 
     return df
 
@@ -187,7 +187,7 @@ def write_data_regular():
     df_histories_by_week = pd.concat(histories_by_week, axis=1)
     upload_dataframe(df_histories_by_week, f"regular_by_week_merged.csv")
 
-    df_currents = pd.concat(currents, axis=1)
+    df_currents = pd.concat(currents)
     upload_dataframe(df_currents, f"regular_current_merged.csv")
 
 
@@ -229,7 +229,7 @@ if __name__ == "__main__":
     with open(f"regular_by_week_merged.csv", "w") as fp:
         fp.write(df_histories_by_week.to_csv(index=True))
 
-    df_currents = pd.concat(currents, axis=1)
+    df_currents = pd.concat(currents)
 
     with open(f"regular_current_merged.csv", "w") as fp:
         fp.write(df_currents.to_csv(index=True))
