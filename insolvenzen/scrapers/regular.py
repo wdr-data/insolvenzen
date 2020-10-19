@@ -37,17 +37,29 @@ def history(case_type):
         by_year[case["date"].year].append(case)
 
     # Bin proceedings by year and week
-    by_week_count = defaultdict(int)
+    by_week_count = defaultdict(lambda: defaultdict(int))
     by_year_and_week_count = defaultdict(lambda: defaultdict(int))
+
+    calendar_today = dt.date.today().isocalendar()
+    year_today = calendar_today[0]
+    week_today = calendar_today[1]
 
     for case in cases:
         # Note: isocalendar week behaves weirdly between years
         calendar = case["date"].isocalendar()
+        year = calendar[0]
+        week = calendar[1]
 
         # ISO week as string for datawrapper
-        by_week_count[f"{calendar[0]}W{calendar[1]}"] += 1
+        if year == year_today or year == year_today - 1 and week >= week_today:
+            subtitle = (
+                "Unternehmen" if case["courtcase-is-company"] else "Selbstständige"
+            )
+            by_week_count[f"{year}W{week}"][
+                f"{CASE_TYPE_HEADERS[case_type]} ({subtitle})"
+            ] += 1
 
-        by_year_and_week_count[calendar[0]][calendar[1]] += 1
+        by_year_and_week_count[year][week] += 1
 
     # Construct dataframes
     df_week_year = pd.concat(
@@ -56,9 +68,12 @@ def history(case_type):
     )
     df_week_year.index.name = "Woche"
 
-    df_week = pd.DataFrame(data=[by_week_count]).T
+    df_week = pd.concat(
+        {k: pd.Series(v).astype(float) for k, v in by_week_count.items()},
+        axis=1,
+    ).T.fillna(0.0)
     df_week.index.name = "Woche"
-    df_week = df_week.rename(columns={0: CASE_TYPE_HEADERS[case_type]})
+    df_week = df_week.reindex(sorted(df_week.columns), axis=1)
 
     return df_week, df_week_year
 
