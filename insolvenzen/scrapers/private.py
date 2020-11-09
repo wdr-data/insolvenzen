@@ -47,6 +47,9 @@ def history():
 
     df_by_week.index.name = "Woche"
 
+    df_by_week["Durchschnitt 2018/2019"] = (df_by_week[2018] + df_by_week[2019]) / 2.0
+    df_by_week = df_by_week.drop(columns=[2018, 2019])
+
     return df_by_week
 
 
@@ -119,7 +122,7 @@ def current():
             "Die 7 Tage davor": {"Insolvenzverfahren": the_7_days_before},
             "Veränderung": {"Insolvenzverfahren": percent_change},
         }
-    ).T
+    )
 
     return df
 
