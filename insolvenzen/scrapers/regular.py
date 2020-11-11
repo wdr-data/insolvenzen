@@ -132,6 +132,7 @@ def districts(case_type):
     return df
 
 
+@lru_cache
 def current(case_type):
     cases, stats = filter_data(InsolvencyType.REGULAR)
     cases = cases[case_type]
