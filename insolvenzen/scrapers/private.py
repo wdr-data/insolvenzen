@@ -97,6 +97,7 @@ def districts():
     return df
 
 
+@lru_cache
 def current():
     cases, stats = filter_data(InsolvencyType.PRIVATE)
     proceedings = cases[CaseType.VERFAHRENEROEFFNET]
@@ -118,7 +119,7 @@ def current():
 
     df = pd.DataFrame(
         data={
-            "Der letzten 7 Tagen": {"Insolvenzverfahren": last_7_days},
+            "Der letzten 7 Tage": {"Insolvenzverfahren": last_7_days},
             "Die 7 Tage davor": {"Insolvenzverfahren": the_7_days_before},
             "Veränderung": {"Insolvenzverfahren": percent_change},
         }

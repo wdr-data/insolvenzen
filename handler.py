@@ -12,12 +12,14 @@ from insolvenzen.scrapers.common import clear_caches
 # Import your scraper here ⬇️
 from insolvenzen.scrapers.private import write_data_private
 from insolvenzen.scrapers.regular import write_data_regular
+from insolvenzen.scrapers.both import write_data_both
 
 # Add your scraper here ⬇️, without () at the end
 SCRAPERS = [
     write_data_private,
     clear_caches,
     write_data_regular,
+    write_data_both,
 ]
 
 
