@@ -9,9 +9,10 @@ from botocore.exceptions import ClientError
 from boto3 import client
 import sentry_sdk
 
+BUCKET_PUBLIC = None
 try:
     s3 = client("s3")
-    bucket = os.environ["BUCKET_PUBLIC_NAME"]
+    BUCKET_PUBLIC = os.environ["BUCKET_PUBLIC_NAME"]
 except Exception as e:
     print("Warning: s3 client not created:", e)
 
@@ -34,7 +35,7 @@ def make_df_compare_fn(*, ignore_columns=None):
     return is_equal
 
 
-def download_file(filename):
+def download_file(filename, *, bucket=BUCKET_PUBLIC):
     bio = BytesIO()
     s3.download_fileobj(bucket, filename, bio)
     bio.seek(0)
@@ -42,7 +43,14 @@ def download_file(filename):
 
 
 def upload_dataframe(
-    df, filename, *, index=True, change_notification=None, compare=None
+    df,
+    filename,
+    *,
+    index=True,
+    change_notification=None,
+    compare=None,
+    bucket=BUCKET_PUBLIC,
+    archive=True,
 ):
 
     if compare is None:
@@ -80,6 +88,9 @@ def upload_dataframe(
                 "ContentType": "text/plain; charset=utf-8",
             },
         )
+
+        if not archive:
+            return
 
         # Upload file again into timestamped folder
         bio_new = BytesIO(write)

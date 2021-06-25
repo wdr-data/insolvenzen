@@ -8,12 +8,14 @@ provider:
   environment:
     BUCKET_PUBLIC_NAME: "insolvenzen-nrw-${self:provider.stage}"
     BUCKET_SOURCE_NAME: ${env:BUCKET_SOURCE_NAME}
+    BUCKET_SOURCE_NAME_TWENTYONE: ${env:BUCKET_SOURCE_NAME_TWENTYONE}
     SENTRY_URI: ${env:SENTRY_URI}
   iamRoleStatements:
     - Effect: Allow
       Action:
         - s3:*
       Resource: "arn:aws:s3:::insolvenzen-nrw-${self:provider.stage}/*"
+
     - Effect: Allow
       Action:
         - s3:*
@@ -27,6 +29,19 @@ provider:
         - s3:*
       Resource: "arn:aws:s3:::${env:BUCKET_SOURCE_NAME}"
 
+    - Effect: Allow
+      Action:
+        - s3:*
+      Resource: "arn:aws:s3:::${env:BUCKET_SOURCE_NAME_TWENTYONE}/*"
+    - Effect: Allow
+      Action:
+        - s3:*
+      Resource: "arn:aws:s3:::${env:BUCKET_SOURCE_NAME_TWENTYONE}/"
+    - Effect: Allow
+      Action:
+        - s3:*
+      Resource: "arn:aws:s3:::${env:BUCKET_SOURCE_NAME_TWENTYONE}"
+
 functions:
   scrape:
     handler: handler.scrape
@@ -35,7 +50,22 @@ functions:
       - schedule:
           name: ${self:service}-${self:provider.stage}-scrape
           rate: cron(30 8 ? * * *)
-          enabled: true
+          enabled: false
+
+  new_file:
+    handler: insolvenzen.twentyone.new_file_handler
+    timeout: 900
+    events:
+      - s3:
+          bucket: ${env:BUCKET_SOURCE_NAME_TWENTYONE}
+          event: s3:ObjectCreated:*
+          rules:
+            - prefix: insolvenzbekanntmachungen-scraper/
+            - suffix: .jsonl
+
+  run_twentyone:
+    handler: insolvenzen.twentyone.run
+    timeout: 900
 
 plugins:
   - serverless-python-requirements

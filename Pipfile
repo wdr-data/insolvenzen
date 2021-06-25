@@ -12,6 +12,8 @@ pytz = "*"
 sentry-sdk = "*"
 boto3 = "*"
 botocore = "*"
+jsonlines = "*"
+dateparser = "*"
 
 [requires]
 python_version = "3.8"
