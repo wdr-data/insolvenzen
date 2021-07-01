@@ -31,5 +31,9 @@ def handle_file(filename: str):
     export_cases(cases, filename)
 
 
-def new_file_handler(event: Any, context: Any):
-    ...
+def new_file_handler(event: dict, context: dict):
+    logger.info("S3 Trigger activated")
+    print(event)
+    for record in event["Records"]:
+        object_key = record["s3"]["object"]["key"]
+        handle_file(object_key)

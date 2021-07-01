@@ -6,6 +6,8 @@ import posixpath
 
 import pandas as pd
 
+BUCKET_EXTRACT_NAME = environ.get("BUCKET_EXTRACT_NAME")
+
 
 def export_cases(cases: List[Dict], original_filename: str):
     logger.info("Exporting {} cases for {}", len(cases), original_filename)
@@ -20,5 +22,14 @@ def export_cases(cases: List[Dict], original_filename: str):
             df.to_csv(fp, index=False, sep=";", line_terminator="\n")
 
     else:
-        export_filename = posixpath.join("extracted", original_filename + ".csv")
-        upload_dataframe(df, export_filename, index=False, archive=False)
+        export_filename = original_filename + ".csv"
+        upload_dataframe(
+            df,
+            export_filename,
+            bucket=BUCKET_EXTRACT_NAME,
+            index=False,
+            archive=False,
+            public_read=False,
+        )
+
+    logger.success("Exporting {} finished!", export_filename)

@@ -9,26 +9,13 @@ provider:
     BUCKET_PUBLIC_NAME: "insolvenzen-nrw-${self:provider.stage}"
     BUCKET_SOURCE_NAME: ${env:BUCKET_SOURCE_NAME}
     BUCKET_SOURCE_NAME_TWENTYONE: ${env:BUCKET_SOURCE_NAME_TWENTYONE}
+    BUCKET_EXTRACT_NAME: "${env:BUCKET_EXTRACT_NAME}-${self:provider.stage}f:provider.stage}"
     SENTRY_URI: ${env:SENTRY_URI}
   iamRoleStatements:
     - Effect: Allow
       Action:
         - s3:*
       Resource: "arn:aws:s3:::insolvenzen-nrw-${self:provider.stage}/*"
-
-    - Effect: Allow
-      Action:
-        - s3:*
-      Resource: "arn:aws:s3:::${env:BUCKET_SOURCE_NAME}/*"
-    - Effect: Allow
-      Action:
-        - s3:*
-      Resource: "arn:aws:s3:::${env:BUCKET_SOURCE_NAME}/"
-    - Effect: Allow
-      Action:
-        - s3:*
-      Resource: "arn:aws:s3:::${env:BUCKET_SOURCE_NAME}"
-
     - Effect: Allow
       Action:
         - s3:*
@@ -36,11 +23,7 @@ provider:
     - Effect: Allow
       Action:
         - s3:*
-      Resource: "arn:aws:s3:::${env:BUCKET_SOURCE_NAME_TWENTYONE}/"
-    - Effect: Allow
-      Action:
-        - s3:*
-      Resource: "arn:aws:s3:::${env:BUCKET_SOURCE_NAME_TWENTYONE}"
+      Resource: "arn:aws:s3:::${env:BUCKET_EXTRACT_NAME}-${self:provider.stage}/*"
 
 functions:
   scrape:

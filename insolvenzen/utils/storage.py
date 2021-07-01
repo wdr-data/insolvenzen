@@ -1,6 +1,8 @@
 import os
 from io import BytesIO
 from datetime import datetime
+from typing import Callable, Literal, Optional, Union
+import posixpath
 
 import pytz
 import pandas as pd
@@ -44,65 +46,80 @@ def download_file(filename, *, bucket=BUCKET_PUBLIC):
 
 
 def upload_dataframe(
-    df,
-    filename,
+    df: pd.DataFrame,
+    filename: str,
     *,
-    index=True,
-    change_notification=None,
-    compare=None,
-    bucket=BUCKET_PUBLIC,
-    archive=True,
+    index: bool = True,
+    change_notification: Optional[str] = None,
+    compare: Optional[Union[Callable, Literal[False]]] = None,
+    bucket: str = BUCKET_PUBLIC,
+    archive: bool = True,
+    public_read: True,
 ):
-
+    logger.info("Uploading dataframe...")
     if compare is None:
         compare = simple_compare
 
     # Convert to csv and encode to get bytes
-    write = df.to_csv(index=index).encode("utf-8")
+    write = df.to_csv(
+        index=index,
+        line_terminator="\n",
+        encoding="utf-8",
+    ).encode("utf-8")
 
     # Read old file-like object to check for differences
-    bio_old = BytesIO()
     compare_failed = False
 
-    try:
-        s3.download_fileobj(bucket, filename, bio_old)
-    except ClientError:
-        compare_failed = True
+    if compare is not False:
+        logger.debug("Comparing...")
+        bio_old = BytesIO()
 
-    bio_old.seek(0)
+        try:
+            s3.download_fileobj(bucket, filename, bio_old)
+        except ClientError:
+            logger.warning("Compare failed!")
+            compare_failed = True
 
-    if compare_failed or not compare(bio_old.read(), write):
-        # Notify
-        if change_notification and not compare_failed:
-            sentry_sdk.capture_message(change_notification)
-
-        # Create new file-like object for upload
-        bio_new = BytesIO(write)
-
-        # Upload file with ACL and content type
-        s3.upload_fileobj(
-            bio_new,
-            bucket,
-            filename,
-            ExtraArgs={
-                "ACL": "public-read",
-                "ContentType": "text/plain; charset=utf-8",
-            },
-        )
-
-        if not archive:
+        bio_old.seek(0)
+        if not compare_failed and compare(bio_old.read(), write):
+            logger.success("No need to update file, done.")
             return
 
-        # Upload file again into timestamped folder
-        bio_new = BytesIO(write)
-        now = datetime.now(tz=pytz.timezone("Europe/Berlin"))
-        timestamp = now.date().isoformat()
-        s3.upload_fileobj(
-            bio_new,
-            bucket,
-            f"{timestamp}/{filename}",
-            ExtraArgs={
-                "ACL": "public-read",
-                "ContentType": "text/plain; charset=utf-8",
-            },
-        )
+    # Notify
+    if change_notification and not compare_failed:
+        logger.debug("Send notification via Sentry...")
+        sentry_sdk.capture_message(change_notification)
+
+    # Create new file-like object for upload
+    bio_new = BytesIO(write)
+
+    # Upload file with ACL and content type
+    logger.debug("Uploading file...")
+    s3.upload_fileobj(
+        bio_new,
+        bucket,
+        filename,
+        ExtraArgs={
+            "ACL": "public-read" if public_read else "private",
+            "ContentType": "text/plain; charset=utf-8",
+        },
+    )
+
+    if not archive:
+        return
+
+    # Upload file again into timestamped folder
+    logger.debug("Uploading archive version of file...")
+    bio_new = BytesIO(write)
+    now = datetime.now(tz=pytz.timezone("Europe/Berlin"))
+    timestamp = now.date().isoformat()
+    *path, filename = posixpath.split(filename)
+    s3.upload_fileobj(
+        bio_new,
+        bucket,
+        f"{posixpath.join(*path)}/{timestamp}/{filename}".lstrip("/"),
+        ExtraArgs={
+            "ACL": "public-read" if public_read else "private",
+            "ContentType": "text/plain; charset=utf-8",
+        },
+    )
