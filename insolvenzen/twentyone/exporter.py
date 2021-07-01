@@ -19,7 +19,7 @@ def export_cases(cases: List[Dict], original_filename: str):
 
         makedirs(export_path, exist_ok=True)
         with open(export_filename, "w", encoding="utf-8") as fp:
-            df.to_csv(fp, index=False, sep=";", line_terminator="\n")
+            df.to_csv(fp, index=False, line_terminator="\n")
 
     else:
         export_filename = original_filename + ".csv"
