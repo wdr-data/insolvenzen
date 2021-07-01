@@ -53,7 +53,7 @@ def extract_features(case: JSON) -> dict:
         "zipcode": zipcode,
         "date_of_birth": dob,
         "kind": kind,
-        "proceeding_type": proceeding_type,
+        "type_of_proceeding": proceeding_type,
         "date_of_proceeding": proceeding_date,
     }
 
