@@ -4,6 +4,7 @@ from datetime import datetime
 
 import pytz
 import pandas as pd
+from loguru import logger
 
 from botocore.exceptions import ClientError
 from boto3 import client
@@ -14,7 +15,7 @@ try:
     s3 = client("s3")
     BUCKET_PUBLIC = os.environ["BUCKET_PUBLIC_NAME"]
 except Exception as e:
-    print("Warning: s3 client not created:", e)
+    logger.info("Warning: s3 client not created: {}", e)
 
 
 def simple_compare(old, new):

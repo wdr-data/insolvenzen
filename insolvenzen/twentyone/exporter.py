@@ -1,3 +1,4 @@
+from loguru import logger
 from insolvenzen.utils.storage import upload_dataframe
 from typing import Dict, List
 from os import path, environ, makedirs
@@ -7,6 +8,7 @@ import pandas as pd
 
 
 def export_cases(cases: List[Dict], original_filename: str):
+    logger.info("Exporting {} cases for {}", len(cases), original_filename)
     df = pd.DataFrame.from_records(data=cases)
 
     if environ.get("USE_LOCAL_FILES"):

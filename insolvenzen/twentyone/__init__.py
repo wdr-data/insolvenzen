@@ -1,5 +1,4 @@
-from typing import Any
-
+from loguru import logger
 from insolvenzen.twentyone.exporter import export_cases
 from insolvenzen.twentyone.extractor import extract_features
 from insolvenzen.twentyone.loader import get_cases, list_files
@@ -24,6 +23,7 @@ def run_concurrent():
 
 
 def handle_file(filename: str):
+    logger.info("Handling file {}", filename)
     cases = []
     for case in get_cases(filename):
         cases.append(extract_features(case))

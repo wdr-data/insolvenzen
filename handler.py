@@ -2,6 +2,7 @@ import json
 import datetime
 import os
 
+from loguru import logger
 import sentry_sdk
 from sentry_sdk.integrations.aws_lambda import AwsLambdaIntegration
 
@@ -31,12 +32,11 @@ def scrape(event, context):
             try:
                 scraper()
                 now = datetime.datetime.now()
-                print(f"Updated {scraper_name} at {now}")
+                logger.info(f"Updated {scraper_name} at {now}")
             except Exception as e:
                 # Catch and send error to Sentry manually so we can continue
                 # running other scrapers if one fails
-                print(f"Scraper {scraper_name} failed with {e}")
-                print(e)
+                logger.exception(f"Scraper {scraper_name} failed with {e}")
                 sentry_sdk.capture_exception(e)
 
     body = {

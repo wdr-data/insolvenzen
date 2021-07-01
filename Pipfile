@@ -14,6 +14,7 @@ boto3 = "*"
 botocore = "*"
 jsonlines = "*"
 dateparser = "*"
+loguru = "*"
 
 [requires]
 python_version = "3.8"

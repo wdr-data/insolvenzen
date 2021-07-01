@@ -2,8 +2,9 @@ from collections import defaultdict
 import datetime as dt
 from functools import lru_cache
 
+from loguru import logger
+
 from insolvenzen.utils.source import (
-    InsolvencyType,
     CaseType,
     load_source_file,
     list_files,
@@ -89,16 +90,22 @@ def filter_data(insolvency_type):
         process_cases(date, fil, CaseType.SICHERUNGSMASSNAHMEN)
         process_cases(date, fil, CaseType.VERFAHRENEROEFFNET)
 
-    print(
+    logger.info(
         f"Found a total of {stats[CaseType.VERFAHRENEROEFFNET]['total_cases']} in all of DE"
     )
-    print(
-        f"No courtcase-residences found for {stats[CaseType.VERFAHRENEROEFFNET]['no_courtcase_residences']} out of those proceedings ({round(stats[CaseType.VERFAHRENEROEFFNET]['no_courtcase_residences'] / stats[CaseType.VERFAHRENEROEFFNET]['total_cases'], 1)}%)"
+    logger.info(
+        f"No courtcase-residences found for "
+        f"{stats[CaseType.VERFAHRENEROEFFNET]['no_courtcase_residences']} out of those proceedings "
+        f"({round(stats[CaseType.VERFAHRENEROEFFNET]['no_courtcase_residences'] / stats[CaseType.VERFAHRENEROEFFNET]['total_cases'], 1)}%)"
     )
 
-    print("Found", len(cases[CaseType.VERFAHRENEROEFFNET]), "relevant proceedings")
-    print(
-        f"{stats[CaseType.VERFAHRENEROEFFNET]['nrw_duplicates']} proceedings in NRW were discarded due to referring to the same court + case number"
+    logger.info(
+        "Found {} relevant proceedings",
+        len(cases[CaseType.VERFAHRENEROEFFNET]),
+    )
+    logger.info(
+        f"{stats[CaseType.VERFAHRENEROEFFNET]['nrw_duplicates']} proceedings in "
+        "NRW were discarded due to referring to the same court + case number"
     )
 
     return cases, stats
