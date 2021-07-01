@@ -9,7 +9,7 @@ provider:
     BUCKET_PUBLIC_NAME: "insolvenzen-nrw-${self:provider.stage}"
     BUCKET_SOURCE_NAME: ${env:BUCKET_SOURCE_NAME}
     BUCKET_SOURCE_NAME_TWENTYONE: ${env:BUCKET_SOURCE_NAME_TWENTYONE}
-    BUCKET_EXTRACT_NAME: "${env:BUCKET_EXTRACT_NAME}-${self:provider.stage}f:provider.stage}"
+    BUCKET_EXTRACT_NAME: "${env:BUCKET_EXTRACT_NAME}-${self:provider.stage}"
     SENTRY_URI: ${env:SENTRY_URI}
   iamRoleStatements:
     - Effect: Allow
@@ -41,6 +41,7 @@ functions:
     events:
       - s3:
           bucket: ${env:BUCKET_SOURCE_NAME_TWENTYONE}
+          existing: true
           event: s3:ObjectCreated:*
           rules:
             - prefix: insolvenzbekanntmachungen-scraper/
