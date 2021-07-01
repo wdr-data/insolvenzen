@@ -13,6 +13,9 @@ RE_DOB = re.compile(
 RE_PROCEEDING_TYPE = re.compile(
     r"(?<=\d_)([^\d]*)(?=.htm$)",
 )
+RE_PROCEEDING_DATE = re.compile(
+    r"(\d{2}\.\d{2}\.\d{4})$",
+)
 
 
 def extract_features(case: JSON) -> dict:
@@ -40,16 +43,23 @@ def extract_features(case: JSON) -> dict:
     match = re.search(RE_PROCEEDING_TYPE, case["file_name"])
     proceeding_type = match and match.group(0)
 
+    # Feature: Date of proceeding
+    match = re.search(RE_PROCEEDING_DATE, case["description"])
+    proceeding_date = match and dateparser.parse(match.group(0), locales=["de"])
+
     # print(kind, zipcode, dob, proceeding_type)
 
     features = {
         "zipcode": zipcode,
-        "dob": dob,
+        "date_of_birth": dob,
         "kind": kind,
         "proceeding_type": proceeding_type,
+        "date_of_proceeding": proceeding_date,
     }
 
     # Update with pre-extracted features
+    case["date_of_publication"] = case["date"]
+    del case["date"]
     features.update(case)
 
     # Drop superfluous fields
