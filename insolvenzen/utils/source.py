@@ -5,6 +5,7 @@ from os import path
 from enum import Enum
 
 from boto3 import client
+from loguru import logger
 
 
 class InsolvencyType(Enum):
@@ -22,7 +23,7 @@ try:
     s3 = client("s3")
     bucket = os.environ["BUCKET_SOURCE_NAME"]
 except Exception as e:
-    print("Warning: s3 client for source not created:", e)
+    logger.info("Warning: s3 client for source not created: {}", e)
 
 USE_LOCAL_FILES = bool(os.environ.get("USE_LOCAL_FILES"))
 
