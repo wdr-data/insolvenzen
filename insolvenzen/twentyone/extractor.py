@@ -20,6 +20,8 @@ RE_PROCEEDING_DATE = re.compile(
 
 def extract_features(case: JSON) -> dict:
 
+    format = case.get("format", "alt")
+
     # Feature: ZIP code
     match = re.search(RE_ZIPCODE, case["description"])
     zipcode = match and match.group(0)
@@ -39,13 +41,17 @@ def extract_features(case: JSON) -> dict:
     else:
         kind = None
 
-    # Feature: Type of proceeding
-    match = re.search(RE_PROCEEDING_TYPE, case["file_name"])
-    proceeding_type = match and match.group(0)
-
     # Feature: Date of proceeding
     match = re.search(RE_PROCEEDING_DATE, case["description"])
     proceeding_date = match and dateparser.parse(match.group(0), locales=["de"])
+
+    # Feature: Type of proceeding
+    if format == "alt":
+        match = re.search(RE_PROCEEDING_TYPE, case["file_name"])
+        proceeding_type = match and match.group(0)
+    elif format == "neu":
+        proceeding_type = case["kind"].replace(" ", "_")
+        del case["kind"]
 
     # print(kind, zipcode, dob, proceeding_type)
 
@@ -64,7 +70,10 @@ def extract_features(case: JSON) -> dict:
 
     # Drop superfluous fields
     del features["description"]
-    del features["url"]
+
+    if format == "alt":
+        del features["url"]
+
     try:
         del features["_type"]
     except Exception:
