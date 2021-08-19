@@ -79,4 +79,4 @@ def extract_features(case: JSON) -> dict:
     except Exception:
         pass
 
-    return features
+    return dict(sorted(features.items()))

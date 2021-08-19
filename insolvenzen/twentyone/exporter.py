@@ -11,6 +11,11 @@ BUCKET_EXTRACT_NAME = environ.get("BUCKET_EXTRACT_NAME")
 
 def export_cases(cases: List[Dict], original_filename: str):
     logger.info("Exporting {} cases for {}", len(cases), original_filename)
+
+    if not cases:
+        logger.warning("No cases, skipping")
+        return
+
     df = pd.DataFrame.from_records(data=cases)
 
     if environ.get("USE_LOCAL_FILES"):
