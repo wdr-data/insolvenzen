@@ -10,6 +10,9 @@ def load_data():
         df_parts = []
 
         for path in sorted(paths):
+            if path.parts[-1] < "2021-08-22T03-47-42.jsonl.csv":
+                continue
+
             print("Reading for analysis:", path)
 
             with open(path, "r", encoding="utf-8") as fp:
@@ -38,4 +41,27 @@ def run():
     pd.set_option("display.max_rows", 200)
 
     print(df)
-    print(df.info())
+    print("All:", len(df))
+
+    print("Fingerprinted:", len(df.groupby("request_fingerprint").first()))
+
+    print(
+        "Eröffnungen all:",
+        len(df[df["type_of_proceeding"] == "Eröffnungen"]),
+    )
+    print(
+        "Eröffnungen fingerprinted:",
+        len(
+            df[df["type_of_proceeding"] == "Eröffnungen"]
+            .groupby("request_fingerprint")
+            .first()
+        ),
+    )
+    print(
+        "Eröffnungen filtered:",
+        len(
+            df[df["type_of_proceeding"] == "Eröffnungen"]
+            .groupby(["case_nr", "date_of_publication"])
+            .first()
+        ),
+    )
