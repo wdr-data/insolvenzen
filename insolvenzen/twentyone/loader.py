@@ -20,7 +20,13 @@ def list_files() -> List[str]:
             environ["BUCKET_SOURCE_NAME_TWENTYONE"],
             JSONL_PATH,
         )
-        return sorted(glob(path.join(base_dir, "*.jsonl")))
+        file_list = sorted(glob(path.join(base_dir, "*.jsonl")))
+        file_list = [
+            file
+            for file in file_list
+            if file >= path.join(base_dir, "2021-08-22T03-47-42.jsonl")
+        ]
+        return file_list
 
     raise Exception(
         "This function only works locally, please define USE_LOCAL_FILES=1 and "
