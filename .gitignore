@@ -46,3 +46,7 @@ regular_by_district_name_abweisungmangelsmasse.csv
 regular_by_district_name_verfahreneroeffnet.csv
 regular_by_district_name_sicherungsmassnahmen.csv
 regular_by_district_name_merged.csv
+buckets
+extracted
+.ipynb_checkpoints
+.~lock*
