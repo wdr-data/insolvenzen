@@ -1,5 +1,6 @@
 import re
 import datetime as dt
+import hashlib
 
 import dateparser
 
@@ -53,6 +54,9 @@ def extract_features(case: JSON) -> dict:
         proceeding_type = case["kind"].replace(" ", "_")
         del case["kind"]
 
+    # Feature: Hash of description
+    description_hash = hashlib.sha256(case["description"].encode("utf-8")).hexdigest()
+
     # print(kind, zipcode, dob, proceeding_type)
 
     features = {
@@ -61,6 +65,7 @@ def extract_features(case: JSON) -> dict:
         "kind": kind,
         "type_of_proceeding": proceeding_type,
         "date_of_proceeding": proceeding_date,
+        "description_hash": description_hash,
     }
 
     # Update with pre-extracted features
