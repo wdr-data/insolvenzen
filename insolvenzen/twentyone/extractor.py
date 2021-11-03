@@ -19,6 +19,17 @@ RE_PROCEEDING_DATE = re.compile(
 )
 
 
+def normalize_description(description: str):
+    description = description.lower()
+
+    if description.startswith("öffentliche bekanntmachung"):
+        description = description[len("öffentliche bekanntmachung") :]
+
+    description = description.strip()
+    description = re.sub(r"[^a-zA-Z0-9]+", "", description)
+    return description
+
+
 def extract_features(case: JSON) -> dict:
 
     format = case.get("format", "alt")
@@ -55,7 +66,9 @@ def extract_features(case: JSON) -> dict:
         del case["kind"]
 
     # Feature: Hash of description
-    description_hash = hashlib.sha256(case["description"].encode("utf-8")).hexdigest()
+    description_hash = hashlib.sha256(
+        normalize_description(case["description"]).encode("utf-8")
+    ).hexdigest()
 
     # print(kind, zipcode, dob, proceeding_type)
 

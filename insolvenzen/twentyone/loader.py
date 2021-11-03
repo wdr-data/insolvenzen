@@ -24,7 +24,7 @@ def list_files() -> List[str]:
         file_list = [
             file
             for file in file_list
-            if file >= path.join(base_dir, "2021-08-22T03-47-42.jsonl")
+            # if file >= path.join(base_dir, "2021-08-22T03-47-42.jsonl")
         ]
         return file_list
 
