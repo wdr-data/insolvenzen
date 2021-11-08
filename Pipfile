@@ -16,6 +16,7 @@ botocore = "*"
 jsonlines = "*"
 dateparser = "*"
 loguru = "*"
+calmap = "*"
 
 [requires]
 python_version = "3.8"
